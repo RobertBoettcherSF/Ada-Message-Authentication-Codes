@@ -22,8 +22,8 @@ begin
 
    --  TEST 1: Simple Hash Functionality
    declare
-      M1 : constant Byte_Array := (1 => 10, 2 => 20);
-      M2 : constant Byte_Array := (1 => 10, 2 => 21);
+      M1 : constant Byte_Array := [1 => 10, 2 => 20];
+      M2 : constant Byte_Array := [1 => 10, 2 => 21];
       R1, R2, R3 : Hash_Array;
    begin
       Put_Line ("TEST 1 — Simple Hash Functionality");
@@ -37,10 +37,10 @@ begin
 
    --  TEST 2: Simple Encrypt Functionality
    declare
-      K  : constant Block_Array := (others => 7);
-      K2 : constant Block_Array := (others => 9);
-      B1 : constant Block_Array := (1 => 1, others => 0);
-      B2 : constant Block_Array := (1 => 2, others => 0);
+      K  : constant Block_Array := [others => 7];
+      K2 : constant Block_Array := [others => 9];
+      B1 : constant Block_Array := [1 => 1, others => 0];
+      B2 : constant Block_Array := [1 => 2, others => 0];
       C1, C2, C3 : Block_Array;
    begin
       Put_Line ("TEST 2 — Simple Encrypt Functionality");
@@ -54,40 +54,40 @@ begin
 
    --  TEST 3: Prefix-MAC Correctness
    declare
-      Key : constant Byte_Array := (1 => 99);
-      Msg : constant Byte_Array := (1 => 55, 2 => 66);
+      Key : constant Byte_Array := [1 => 99];
+      Msg : constant Byte_Array := [1 => 55, 2 => 66];
       R1, R2, R3 : Hash_Array;
    begin
       Put_Line ("TEST 3 — Prefix-MAC Correctness");
       R1 := Prefix_MAC (Key, Msg);
       R2 := Prefix_MAC (Key, Msg);
-      R3 := Prefix_MAC ((1 => 100), Msg);
+      R3 := Prefix_MAC ([1 => 100], Msg);
       Check ("3.1 Prefix-MAC determinism", R1 = R2);
       Check ("3.2 Prefix-MAC key sensitivity", R1 /= R3);
-      Check ("3.3 Prefix-MAC message sensitivity", R1 /= Prefix_MAC (Key, (1 => 55)));
+      Check ("3.3 Prefix-MAC message sensitivity", R1 /= Prefix_MAC (Key, [1 => 55]));
    end;
 
    --  TEST 4: HMAC Basic Execution
    declare
-      Key : constant Byte_Array := (1 => 16#0B#, 2 => 16#0B#);
-      Msg : constant Byte_Array := (1 => 1, 2 => 2, 3 => 3);
+      Key : constant Byte_Array := [1 => 16#0B#, 2 => 16#0B#];
+      Msg : constant Byte_Array := [1 => 1, 2 => 2, 3 => 3];
       R1, R2, R3 : Hash_Array;
    begin
       Put_Line ("TEST 4 — HMAC Basic Execution");
       R1 := HMAC (Key, Msg);
       R2 := HMAC (Key, Msg);
-      R3 := HMAC (Key, (1 => 1, 2 => 2, 3 => 4));
+      R3 := HMAC (Key, [1 => 1, 2 => 2, 3 => 4]);
       Check ("4.1 HMAC determinism", R1 = R2);
-      Check ("4.2 HMAC key sensitivity", R1 /= HMAC ((1 => 16#0C#), Msg));
+      Check ("4.2 HMAC key sensitivity", R1 /= HMAC ([1 => 16#0C#], Msg));
       Check ("4.3 HMAC message sensitivity", R1 /= R3);
    end;
 
    --  TEST 5: HMAC Key Length Variations
    declare
-      Short_Key : constant Byte_Array (1 .. 1) := (1 => 16#AA#);
-      Exact_Key : constant Byte_Array (1 .. 16) := (others => 16#BB#);
-      Long_Key  : constant Byte_Array (1 .. 32) := (others => 16#CC#);
-      Msg       : constant Byte_Array (1 .. 3) := (1, 2, 3);
+      Short_Key : constant Byte_Array (1 .. 1) := [1 => 16#AA#];
+      Exact_Key : constant Byte_Array (1 .. 16) := [others => 16#BB#];
+      Long_Key  : constant Byte_Array (1 .. 32) := [others => 16#CC#];
+      Msg       : constant Byte_Array (1 .. 3) := [1 => 1, 2 => 2, 3 => 3];
       R1, R2, R3 : Hash_Array;
    begin
       Put_Line ("TEST 5 — HMAC Key Length Variations");
@@ -101,39 +101,39 @@ begin
 
    --  TEST 6: HMAC Empty Message
    declare
-      Key       : constant Byte_Array (1 .. 4) := (1, 2, 3, 4);
-      Empty_Msg : constant Byte_Array (1 .. 0) := (others => 0);
-      Full_Msg  : constant Byte_Array (1 .. 1) := (1 => 1);
+      Key       : constant Byte_Array (1 .. 4) := [1 => 1, 2 => 2, 3 => 3, 4 => 4];
+      Empty_Msg : constant Byte_Array (1 .. 0) := [others => 0];
+      Full_Msg  : constant Byte_Array (1 .. 1) := [1 => 1];
       R1, R2    : Hash_Array;
    begin
       Put_Line ("TEST 6 — HMAC Empty Message Processing");
       R1 := HMAC (Key, Empty_Msg);
       R2 := HMAC (Key, Full_Msg);
       Check ("6.1 HMAC supports zero-length messages", R1'Length = 16);
-      Check ("6.2 HMAC empty message result is non-zero (hashed)", R1 /= Hash_Array'(others => 0));
+      Check ("6.2 HMAC empty message result is non-zero (hashed)", R1 /= Hash_Array'[others => 0]);
       Check ("6.3 HMAC empty message != populated message", R1 /= R2);
    end;
 
    --  TEST 7: CBC-MAC Basic Execution
    declare
-      Key : constant Block_Array := (others => 16#11#);
-      Msg : constant Byte_Array  := (1 => 16#22#, 2 => 16#33#);
+      Key : constant Block_Array := [others => 16#11#];
+      Msg : constant Byte_Array  := [1 => 16#22#, 2 => 16#33#];
       R1, R2, R3 : Block_Array;
    begin
       Put_Line ("TEST 7 — CBC-MAC Basic Execution");
       R1 := CBC_MAC (Key, Msg);
       R2 := CBC_MAC (Key, Msg);
-      R3 := CBC_MAC ((others => 16#22#), Msg);
+      R3 := CBC_MAC ([others => 16#22#], Msg);
       Check ("7.1 CBC-MAC determinism", R1 = R2);
       Check ("7.2 CBC-MAC key sensitivity", R1 /= R3);
-      Check ("7.3 CBC-MAC message sensitivity", R1 /= CBC_MAC (Key, (1 => 16#22#, 2 => 16#44#)));
+      Check ("7.3 CBC-MAC message sensitivity", R1 /= CBC_MAC (Key, [1 => 16#22#, 2 => 16#44#]));
    end;
 
    --  TEST 8: CBC-MAC Padding Mechanism (Non-Multiples)
    declare
-      Key : constant Block_Array := (others => 5);
-      M1  : constant Byte_Array  := (1 => 1);
-      M2  : constant Byte_Array  := (1 .. 17 => 1);
+      Key : constant Block_Array := [others => 5];
+      M1  : constant Byte_Array  := [1 => 1];
+      M2  : constant Byte_Array  := [1 .. 17 => 1];
       R1, R2 : Block_Array;
    begin
       Put_Line ("TEST 8 — CBC-MAC Padding Mechanism");
@@ -146,9 +146,9 @@ begin
 
    --  TEST 9: CBC-MAC Exact Block Length
    declare
-      Key : constant Block_Array := (others => 9);
-      M1  : constant Byte_Array  := (1 .. 16 => 2);
-      M2  : constant Byte_Array  := (1 .. 32 => 2);
+      Key : constant Block_Array := [others => 9];
+      M1  : constant Byte_Array  := [1 .. 16 => 2];
+      M2  : constant Byte_Array  := [1 .. 32 => 2];
       R1, R2 : Block_Array;
    begin
       Put_Line ("TEST 9 — CBC-MAC Exact Block Length");
@@ -161,8 +161,8 @@ begin
 
    --  TEST 10: Invalid Key Error Handling
    declare
-      Empty_Key : constant Byte_Array (1 .. 0) := (others => 0);
-      Valid_Msg : constant Byte_Array (1 .. 1) := (1 => 1);
+      Empty_Key : constant Byte_Array (1 .. 0) := [others => 0];
+      Valid_Msg : constant Byte_Array (1 .. 1) := [1 => 1];
       Got_Error_1 : Boolean := False;
       Got_Error_2 : Boolean := False;
       Got_Error_3 : Boolean := False;
@@ -170,21 +170,36 @@ begin
       Put_Line ("TEST 10 — Invalid Key Error Handling");
       
       begin
-         if HMAC (Empty_Key, Valid_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Hash_Array := HMAC (Empty_Key, Valid_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when Invalid_Key_Error => Got_Error_1 := True;
       end;
       Check ("10.1 HMAC rejects empty key safely", Got_Error_1);
 
       begin
-         if Prefix_MAC (Empty_Key, Valid_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Hash_Array := Prefix_MAC (Empty_Key, Valid_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when Invalid_Key_Error => Got_Error_2 := True;
       end;
       Check ("10.2 Prefix-MAC rejects empty key safely", Got_Error_2);
 
       begin
-         if HMAC ((1 => 5), Valid_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Hash_Array := HMAC ([1 => 5], Valid_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when others => Got_Error_3 := True;
       end;
@@ -193,9 +208,9 @@ begin
 
    --  TEST 11: Invalid Message Error Handling
    declare
-      Key : constant Block_Array := (others => 0);
-      Empty_Msg : constant Byte_Array (1 .. 0) := (others => 0);
-      Valid_Msg : constant Byte_Array (1 .. 1) := (1 => 1);
+      Key : constant Block_Array := [others => 0];
+      Empty_Msg : constant Byte_Array (1 .. 0) := [others => 0];
+      Valid_Msg : constant Byte_Array (1 .. 1) := [1 => 1];
       Got_Error_1 : Boolean := False;
       Got_Error_2 : Boolean := False;
       Got_Error_3 : Boolean := False;
@@ -203,21 +218,36 @@ begin
       Put_Line ("TEST 11 — Invalid Message Error Handling");
       
       begin
-         if CBC_MAC (Key, Empty_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Block_Array := CBC_MAC (Key, Empty_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when Invalid_Message_Error => Got_Error_1 := True;
       end;
       Check ("11.1 CBC-MAC rejects empty message explicitly", Got_Error_1);
 
       begin
-         if CBC_MAC (Key, Valid_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Block_Array := CBC_MAC (Key, Valid_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when others => Got_Error_2 := True;
       end;
       Check ("11.2 CBC-MAC valid message length succeeds", not Got_Error_2);
       
       begin
-         if Simple_Hash (Empty_Msg)'Length > 0 then null; end if;
+         declare
+            Dummy : constant Hash_Array := Simple_Hash (Empty_Msg);
+            pragma Unreferenced (Dummy);
+         begin
+            null;
+         end;
       exception
          when others => Got_Error_3 := True;
       end;
@@ -226,9 +256,9 @@ begin
 
    --  TEST 12: HMAC Avalanche Effect
    declare
-      Key : constant Byte_Array := (1 => 16#F0#);
-      M1  : constant Byte_Array := (1 .. 16 => 0);
-      M2  : Byte_Array := (1 .. 16 => 0);
+      Key : constant Byte_Array := [1 => 16#F0#];
+      M1  : constant Byte_Array := [1 .. 16 => 0];
+      M2  : Byte_Array := [1 .. 16 => 0];
       R1, R2 : Hash_Array;
       Match_Count : Natural := 0;
    begin
@@ -250,9 +280,9 @@ begin
 
    --  TEST 13: CBC-MAC Avalanche Effect
    declare
-      Key : constant Block_Array := (others => 16#5A#);
-      M1  : constant Byte_Array := (1 .. 32 => 16#FF#);
-      M2  : Byte_Array := (1 .. 32 => 16#FF#);
+      Key : constant Block_Array := [others => 16#5A#];
+      M1  : constant Byte_Array := [1 .. 32 => 16#FF#];
+      M2  : Byte_Array := [1 .. 32 => 16#FF#];
       R1, R2 : Block_Array;
       Match_Count : Natural := 0;
    begin
