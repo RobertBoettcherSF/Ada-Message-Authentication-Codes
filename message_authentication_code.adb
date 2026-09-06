@@ -17,11 +17,24 @@ package body Message_Authentication_Code is
    --  Processes data in 16-byte chunks.
    -----------------------------------------------------------------------------
    function Simple_Hash (Message : Byte_Array) return Hash_Array is
-      State : Hash_Array := (others => 16#A5#); -- Initial fixed state
+      State : Hash_Array := [others => 16#A5#]; -- Initial fixed state
       I     : Positive   := Message'First;
       Len   : Natural    := Message'Length;
-      Temp  : Hash_Array;
       Chunk : Hash_Array;
+
+      --  Helper to diffuse bits extensively across the state
+      procedure Mix (S : in out Hash_Array) is
+         T : Hash_Array;
+      begin
+         for Pass in 1 .. 4 loop
+            T := S;
+            for J in 1 .. Hash_Output_Size loop
+               S (J) := T (if J = Hash_Output_Size then 1 else J + 1) + T (J);
+               S (J) := (S (J) * 8) or (S (J) / 32); -- Rotate left by 3
+               S (J) := S (J) xor 16#33#;
+            end loop;
+         end loop;
+      end Mix;
    begin
       --  Process full blocks iteratively
       while Len >= Hash_Block_Size loop
@@ -30,19 +43,14 @@ package body Message_Authentication_Code is
          end loop;
 
          State := XOR_Blocks (State, Chunk);
-         Temp  := State;
-
-         --  Simple permutation/mixing
-         for J in 1 .. Hash_Block_Size loop
-            State (J) := Temp (if J = Hash_Block_Size then 1 else J + 1) xor 16#33#;
-         end loop;
+         Mix (State);
 
          I   := I + Hash_Block_Size;
          Len := Len - Hash_Block_Size;
       end loop;
 
       --  Process final remaining bytes with standard 0x80 padding
-      Chunk := (others => 0);
+      Chunk := [others => 0];
       for J in 1 .. Len loop
          Chunk (J) := Message (I + J - 1);
       end loop;
@@ -51,11 +59,7 @@ package body Message_Authentication_Code is
       Chunk (Len + 1) := 16#80#;
 
       State := XOR_Blocks (State, Chunk);
-      Temp  := State;
-
-      for J in 1 .. Hash_Block_Size loop
-         State (J) := Temp (if J = Hash_Block_Size then 1 else J + 1) xor 16#55#;
-      end loop;
+      Mix (State);
 
       return State;
    end Simple_Hash;
@@ -65,12 +69,16 @@ package body Message_Authentication_Code is
    -----------------------------------------------------------------------------
    function Simple_Encrypt (Key : Block_Array; Block : Block_Array) return Block_Array is
       State : Block_Array := Block;
+      Temp  : Block_Array;
    begin
       for Round in 1 .. 10 loop
          State := XOR_Blocks (State, Key);
+         Temp  := State;
          for J in Block_Array'Range loop
+            --  Add adjacent byte to ensure cascade/diffusion across the block
+            State (J) := Temp (J) + Temp (if J = 1 then Block_Array'Last else J - 1);
             --  Modular left rotate by 3 bits and round constant addition
-            State (J) := ((State (J) * 8) or (State (J) / 32)) + Byte (Round);
+            State (J) := ((State (J) * 8) or (State (J) / 32)) xor Byte (Round);
          end loop;
       end loop;
       return State;
@@ -83,9 +91,9 @@ package body Message_Authentication_Code is
      (Key     : Byte_Array;
       Message : Byte_Array) return Hash_Array
    is
-      K         : Block_Array := (others => 0);
-      I_Pad     : constant Block_Array := (others => 16#36#);
-      O_Pad     : constant Block_Array := (others => 16#5C#);
+      K         : Block_Array := [others => 0];
+      I_Pad     : constant Block_Array := [others => 16#36#];
+      O_Pad     : constant Block_Array := [others => 16#5C#];
       I_Key_Pad : Block_Array;
       O_Key_Pad : Block_Array;
       
@@ -133,7 +141,7 @@ package body Message_Authentication_Code is
      (Key     : Block_Array;
       Message : Byte_Array) return Block_Array
    is
-      State : Block_Array := (others => 0);
+      State : Block_Array := [others => 0];
       I     : Positive;
       Len   : Natural;
       Chunk : Block_Array;
@@ -161,7 +169,7 @@ package body Message_Authentication_Code is
       --  Apply Padding block (append 0x80, followed by zeroes to fill block)
       --  Note: Even if exact multiple, standard CBC-MAC often appends a padded
       --  block to prevent length extension vulnerabilities.
-      Chunk := (others => 0);
+      Chunk := [others => 0];
       for J in 1 .. Len loop
          Chunk (J) := Message (I + J - 1);
       end loop;
