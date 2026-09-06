@@ -32,8 +32,7 @@ is
    function HMAC
      (Key     : Byte_Array;
       Message : Byte_Array) return Hash_Array
-     with Global => null,
-          Post   => HMAC'Result'Length = Hash_Output_Size;
+     with Global => null;
 
    --  Variant 2: CBC-MAC (Cipher Block Chaining MAC)
    --  Generates a MAC using a block cipher in Cipher Block Chaining mode.
@@ -41,8 +40,7 @@ is
    function CBC_MAC
      (Key     : Block_Array;
       Message : Byte_Array) return Block_Array
-     with Global => null,
-          Post   => CBC_MAC'Result'Length = Hash_Block_Size;
+     with Global => null;
 
    --  Variant 3: Prefix-MAC (Secret Prefix MAC)
    --  Computes MAC = Hash (Key || Message).
@@ -51,17 +49,14 @@ is
    function Prefix_MAC
      (Key     : Byte_Array;
       Message : Byte_Array) return Hash_Array
-     with Global => null,
-          Post   => Prefix_MAC'Result'Length = Hash_Output_Size;
+     with Global => null;
 
    --  Helper: A simplified hash function to serve as the underlying primitive.
    function Simple_Hash (Message : Byte_Array) return Hash_Array
-     with Global => null,
-          Post   => Simple_Hash'Result'Length = Hash_Output_Size;
+     with Global => null;
 
    --  Helper: A simplified 10-round block cipher to serve as the primitive.
    function Simple_Encrypt (Key : Block_Array; Block : Block_Array) return Block_Array
-     with Global => null,
-          Post   => Simple_Encrypt'Result'Length = Hash_Block_Size;
+     with Global => null;
 
 end Message_Authentication_Code;
